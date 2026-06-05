@@ -1,0 +1,96 @@
+#DATASET
+Churn
+0 = Customer Stays
+1 = Customer Leaves
+
+
+
+
+#TRAIN RANDOM FOREST MODEL
+from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier(
+    n_estimators=200,
+    random_state=42
+)
+
+rf.fit(X_train, y_train)
+
+
+
+
+#FEATURE IMPORTANCE ANALYSIS
+import pandas as pd
+import matplotlib.pyplot as plt
+
+importance = rf.feature_importances_
+
+feature_importance = pd.DataFrame({
+    'Feature': X.columns,
+    'Importance': importance
+})
+
+feature_importance = feature_importance.sort_values(
+    by='Importance',
+    ascending=False
+)
+
+plt.figure(figsize=(10,6))
+plt.barh(
+    feature_importance['Feature'][:10],
+    feature_importance['Importance'][:10]
+)
+plt.title("Top 10 Important Features")
+plt.show()
+
+
+
+
+#GENERATE SHAP VALUES
+import shap
+
+explainer = shap.TreeExplainer(rf)
+
+shap_values = explainer.shap_values(X_test)
+
+shap.summary_plot(
+    shap_values[1],
+    X_test
+)
+
+
+
+# GENDER BIAS CHECK(ACCURACY BT GENDER)
+male_data = df[df["gender"] == 0]
+female_data = df[df["gender"] == 1]
+
+print("Male Churn Rate:",
+      male_data["Churn"].mean())
+
+print("Female Churn Rate:",
+      female_data["Churn"].mean())
+
+
+
+
+# SENIOR CITIZEN BIAS CHECK
+senior = df[df["SeniorCitizen"] == 1]
+non_senior = df[df["SeniorCitizen"] == 0]
+
+print(senior["Churn"].mean())
+print(non_senior["Churn"].mean())
+
+
+
+
+
+# DEMOGRAPHIC PARITY CHECK
+group1 = predictions[gender == 0].mean()
+
+group2 = predictions[gender == 1].mean()
+
+parity_difference = abs(
+    group1 - group2
+)
+
+print(parity_difference)
